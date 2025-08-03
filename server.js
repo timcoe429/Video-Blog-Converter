@@ -25,6 +25,33 @@ if (fs.existsSync(buildPath)) {
   console.warn('Build directory not found. Make sure to run "npm run build" first.');
 }
 
+// Helper function to make API calls with proper error handling
+const makeClaudeRequest = async (payload) => {
+  console.log('Making Claude API request with payload:', {
+    model: payload.model,
+    max_tokens: payload.max_tokens,
+    messageLength: payload.messages[0].content.length
+  });
+  
+  // Validate API key format
+  if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-')) {
+    throw new Error('Invalid ANTHROPIC_API_KEY format. Should start with sk-ant-');
+  }
+  
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify(payload)
+  });
+  
+  console.log('Claude API response status:', response.status, response.statusText);
+  return response;
+};
+
 // Clean transcript endpoint
 app.post('/api/clean-transcript', async (req, res) => {
   try {
@@ -35,24 +62,21 @@ app.post('/api/clean-transcript', async (req, res) => {
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('ANTHROPIC_API_KEY not configured');
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
     console.log('Cleaning transcript with Claude...');
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 4000,
-        messages: [
-          {
-            role: "user",
-            content: `Clean up this video transcript for blog readability. Make it professional and easy to read:
+    console.log('API Key present:', !!process.env.ANTHROPIC_API_KEY);
+    console.log('API Key format check:', process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-'));
+    
+    const response = await makeClaudeRequest({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 4000,
+      messages: [
+        {
+          role: "user",
+          content: `Clean up this video transcript for blog readability. Make it professional and easy to read:
 
 1. Fix grammar, punctuation, and capitalization
 2. Remove filler words (um, uh, you know, etc.)
@@ -65,13 +89,24 @@ Transcript:
 ${transcript}
 
 Return only the cleaned transcript, nothing else.`
-          }
-        ]
-      })
+        }
+      ]
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { error: { message: 'Failed to parse error response' } };
+      }
+      
+      // Handle specific error cases
+      if (response.status === 529) {
+        console.error('Claude API returned 529 - this should not happen if Claude is working elsewhere');
+        console.error('Check API key and request format');
+      }
+      
       console.error('Claude API error for transcript cleaning:', errorData);
       return res.status(response.status).json({ 
         error: `Failed to clean transcript: ${errorData.error?.message || 'Unknown error'}` 
@@ -85,7 +120,16 @@ Return only the cleaned transcript, nothing else.`
 
   } catch (error) {
     console.error('Error cleaning transcript:', error);
-    res.status(500).json({ error: 'Failed to clean transcript' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      apiKeyPresent: !!process.env.ANTHROPIC_API_KEY,
+      apiKeyValid: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-')
+    });
+    
+    res.status(500).json({ 
+      error: `Failed to clean transcript: ${error.message}`
+    });
   }
 });
 
@@ -103,21 +147,16 @@ app.post('/api/generate-content', async (req, res) => {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
-    console.log('Making request to Claude API...');
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 4000,
-        messages: [
-          {
-            role: "user",
-            content: `Based on this clean, formatted video transcript, generate the following content in JSON format:
+    console.log('Making request to Claude API for content generation...');
+    console.log('Transcript length:', transcript.length);
+    
+    const response = await makeClaudeRequest({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 4000,
+      messages: [
+        {
+          role: "user",
+          content: `Based on this clean, formatted video transcript, generate the following content in JSON format:
 
 1. SEO-optimized title (60 characters max)
 2. Meta description (150 characters max)
@@ -145,9 +184,8 @@ Return ONLY a valid JSON object with this structure:
 }
 
 DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
-          }
-        ]
-      })
+        }
+      ]
     });
 
     if (!response.ok) {
@@ -157,13 +195,27 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
       } catch (e) {
         errorData = { error: { message: 'Failed to parse error response' } };
       }
+      
       console.error('Anthropic API error:', {
         status: response.status,
         statusText: response.statusText,
         errorData
       });
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Unknown error';
+      if (response.status === 529) {
+        errorMessage = 'Claude API is temporarily overloaded. Please try again in a few minutes.';
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid API key configuration';
+      } else if (response.status === 400) {
+        errorMessage = 'Invalid request format';
+      } else {
+        errorMessage = errorData.error?.message || errorData.message || 'Service temporarily unavailable';
+      }
+      
       return res.status(response.status).json({ 
-        error: `API request failed (${response.status}): ${errorData.error?.message || errorData.message || 'Unknown error'}` 
+        error: `API request failed (${response.status}): ${errorMessage}` 
       });
     }
 
@@ -183,7 +235,16 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
 
   } catch (error) {
     console.error('Error generating content:', error);
-    res.status(500).json({ error: 'Failed to generate content' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      apiKeyPresent: !!process.env.ANTHROPIC_API_KEY,
+      apiKeyValid: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-')
+    });
+    
+    res.status(500).json({ 
+      error: `Failed to generate content: ${error.message}`
+    });
   }
 });
 
@@ -210,7 +271,15 @@ app.listen(PORT, () => {
   
   // Test API key format
   if (process.env.ANTHROPIC_API_KEY) {
-    const keyStart = process.env.ANTHROPIC_API_KEY.substring(0, 10);
+    const keyStart = process.env.ANTHROPIC_API_KEY.substring(0, 15);
+    const isValidFormat = process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-');
     console.log(`🔍 API Key starts with: ${keyStart}...`);
+    console.log(`✅ API Key format valid: ${isValidFormat}`);
+    
+    if (!isValidFormat) {
+      console.error('❌ WARNING: API key does not start with sk-ant- which is required for Anthropic API');
+    }
+  } else {
+    console.error('❌ WARNING: No ANTHROPIC_API_KEY found in environment variables');
   }
 });

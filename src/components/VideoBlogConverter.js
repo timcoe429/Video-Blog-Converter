@@ -34,6 +34,10 @@ const VideoBlogConverter = () => {
       }
 
       const data = await response.json();
+      
+      // Log success
+      console.log('Transcript cleaned successfully');
+      
       return data.cleanedTranscript || text;
     } catch (error) {
       console.error('Error cleaning transcript:', error);
