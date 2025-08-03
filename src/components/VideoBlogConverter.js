@@ -91,13 +91,13 @@ const VideoBlogConverter = () => {
       {
         id: 'clean',
         title: 'AI Transcript Cleaning',
-        description: 'Formatting transcript with Claude AI for readability...',
+        description: 'Formatting transcript with ChatGPT for readability...',
         status: 'pending'
       },
       {
         id: 'generate',
         title: 'Generating SEO Content',
-        description: 'Creating title, meta description, FAQs, and takeaways...',
+        description: 'Creating title, meta description, FAQs, and takeaways with ChatGPT...',
         status: 'pending'
       },
       {
@@ -156,12 +156,12 @@ const VideoBlogConverter = () => {
       updateStep('extract', 'completed');
 
       // Step 3: Clean transcript
-      updateStep('clean', 'active', 'Processing transcript with Claude AI...');
+      updateStep('clean', 'active', 'Processing transcript with ChatGPT...');
       const formattedTranscript = await formatTranscript(transcript);
       updateStep('clean', 'completed');
 
       // Step 4: Generate content
-      updateStep('generate', 'active', 'Generating SEO content with Claude AI...');
+      updateStep('generate', 'active', 'Generating SEO content with ChatGPT...');
       const generatedContent = await generateContent(formattedTranscript, videoTitle);
       updateStep('generate', 'completed');
 

@@ -26,29 +26,28 @@ if (fs.existsSync(buildPath)) {
 }
 
 // Helper function to make API calls with proper error handling
-const makeClaudeRequest = async (payload) => {
-  console.log('Making Claude API request with payload:', {
+const makeOpenAIRequest = async (payload) => {
+  console.log('Making OpenAI API request with payload:', {
     model: payload.model,
     max_tokens: payload.max_tokens,
     messageLength: payload.messages[0].content.length
   });
   
   // Validate API key format
-  if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-')) {
-    throw new Error('Invalid ANTHROPIC_API_KEY format. Should start with sk-ant-');
+  if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_API_KEY.startsWith('sk-')) {
+    throw new Error('Invalid OPENAI_API_KEY format. Should start with sk-');
   }
   
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify(payload)
   });
   
-  console.log('Claude API response status:', response.status, response.statusText);
+  console.log('OpenAI API response status:', response.status, response.statusText);
   return response;
 };
 
@@ -61,18 +60,18 @@ app.post('/api/clean-transcript', async (req, res) => {
       return res.status(400).json({ error: 'Transcript is required' });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY not configured');
-      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY not configured');
+      return res.status(500).json({ error: 'OPENAI_API_KEY not configured' });
     }
 
-    console.log('Cleaning transcript with Claude...');
-    console.log('API Key present:', !!process.env.ANTHROPIC_API_KEY);
-    console.log('API Key format check:', process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-'));
+    console.log('Cleaning transcript with ChatGPT...');
+    console.log('API Key present:', !!process.env.OPENAI_API_KEY);
+    console.log('API Key format check:', process.env.OPENAI_API_KEY?.startsWith('sk-'));
     
-    const response = await makeClaudeRequest({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 8000,
+    const response = await makeOpenAIRequest({
+      model: "gpt-4o-mini",
+      max_tokens: 16384,
       messages: [
         {
           role: "user",
@@ -109,20 +108,14 @@ Return the cleaned and formatted transcript with proper speaker identification a
         errorData = { error: { message: 'Failed to parse error response' } };
       }
       
-      // Handle specific error cases
-      if (response.status === 529) {
-        console.error('Claude API returned 529 - this should not happen if Claude is working elsewhere');
-        console.error('Check API key and request format');
-      }
-      
-      console.error('Claude API error for transcript cleaning:', errorData);
+      console.error('OpenAI API error for transcript cleaning:', errorData);
       return res.status(response.status).json({ 
         error: `Failed to clean transcript: ${errorData.error?.message || 'Unknown error'}` 
       });
     }
 
     const data = await response.json();
-    const cleanedTranscript = data.content[0].text.trim();
+    const cleanedTranscript = data.choices[0].message.content.trim();
     
     res.json({ cleanedTranscript });
 
@@ -131,8 +124,8 @@ Return the cleaned and formatted transcript with proper speaker identification a
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
-      apiKeyPresent: !!process.env.ANTHROPIC_API_KEY,
-      apiKeyValid: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-')
+      apiKeyPresent: !!process.env.OPENAI_API_KEY,
+      apiKeyValid: process.env.OPENAI_API_KEY?.startsWith('sk-')
     });
     
     res.status(500).json({ 
@@ -150,17 +143,17 @@ app.post('/api/generate-content', async (req, res) => {
       return res.status(400).json({ error: 'Transcript is required' });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY not configured');
-      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY not configured');
+      return res.status(500).json({ error: 'OPENAI_API_KEY not configured' });
     }
 
-    console.log('Making request to Claude API for content generation...');
+    console.log('Making request to OpenAI API for content generation...');
     console.log('Transcript length:', transcript.length);
     
-    const response = await makeClaudeRequest({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 8000,
+    const response = await makeOpenAIRequest({
+      model: "gpt-4o-mini",
+      max_tokens: 16384,
       messages: [
         {
           role: "user",
@@ -214,7 +207,7 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
         errorData = { error: { message: 'Failed to parse error response' } };
       }
       
-      console.error('Anthropic API error:', {
+      console.error('OpenAI API error:', {
         status: response.status,
         statusText: response.statusText,
         errorData
@@ -222,8 +215,8 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
       
       // Provide more helpful error messages
       let errorMessage = 'Unknown error';
-      if (response.status === 529) {
-        errorMessage = 'Claude API is temporarily overloaded. Please try again in a few minutes.';
+      if (response.status === 429) {
+        errorMessage = 'OpenAI API rate limit exceeded. Please try again in a few minutes.';
       } else if (response.status === 401) {
         errorMessage = 'Invalid API key configuration';
       } else if (response.status === 400) {
@@ -238,7 +231,7 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
     }
 
     const data = await response.json();
-    let responseText = data.content[0].text;
+    let responseText = data.choices[0].message.content;
     
     // Clean up any markdown formatting
     responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
@@ -247,7 +240,7 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
       const generatedContent = JSON.parse(responseText);
       res.json(generatedContent);
     } catch (parseError) {
-      console.error('Failed to parse Claude response:', responseText);
+      console.error('Failed to parse OpenAI response:', responseText);
       res.status(500).json({ error: 'Failed to parse generated content' });
     }
 
@@ -256,8 +249,8 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
-      apiKeyPresent: !!process.env.ANTHROPIC_API_KEY,
-      apiKeyValid: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-')
+      apiKeyPresent: !!process.env.OPENAI_API_KEY,
+      apiKeyValid: process.env.OPENAI_API_KEY?.startsWith('sk-')
     });
     
     res.status(500).json({ 
@@ -284,20 +277,20 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔑 Anthropic API Key configured: ${!!process.env.ANTHROPIC_API_KEY}`);
+  console.log(`🔑 OpenAI API Key configured: ${!!process.env.OPENAI_API_KEY}`);
   console.log(`📂 Build directory exists: ${fs.existsSync(path.join(__dirname, 'build'))}`);
   
   // Test API key format
-  if (process.env.ANTHROPIC_API_KEY) {
-    const keyStart = process.env.ANTHROPIC_API_KEY.substring(0, 15);
-    const isValidFormat = process.env.ANTHROPIC_API_KEY.startsWith('sk-ant-');
+  if (process.env.OPENAI_API_KEY) {
+    const keyStart = process.env.OPENAI_API_KEY.substring(0, 15);
+    const isValidFormat = process.env.OPENAI_API_KEY.startsWith('sk-');
     console.log(`🔍 API Key starts with: ${keyStart}...`);
     console.log(`✅ API Key format valid: ${isValidFormat}`);
     
     if (!isValidFormat) {
-      console.error('❌ WARNING: API key does not start with sk-ant- which is required for Anthropic API');
+      console.error('❌ WARNING: API key does not start with sk- which is required for OpenAI API');
     }
   } else {
-    console.error('❌ WARNING: No ANTHROPIC_API_KEY found in environment variables');
+    console.error('❌ WARNING: No OPENAI_API_KEY found in environment variables');
   }
 });
