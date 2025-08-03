@@ -25,6 +25,70 @@ if (fs.existsSync(buildPath)) {
   console.warn('Build directory not found. Make sure to run "npm run build" first.');
 }
 
+// Clean transcript endpoint
+app.post('/api/clean-transcript', async (req, res) => {
+  try {
+    const { transcript } = req.body;
+
+    if (!transcript) {
+      return res.status(400).json({ error: 'Transcript is required' });
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    }
+
+    console.log('Cleaning transcript with Claude...');
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 4000,
+        messages: [
+          {
+            role: "user",
+            content: `Clean up this video transcript for blog readability. Make it professional and easy to read:
+
+1. Fix grammar, punctuation, and capitalization
+2. Remove filler words (um, uh, you know, etc.)
+3. Add proper paragraph breaks
+4. Format speaker names clearly with proper labels
+5. Keep the meaning exactly the same
+6. Make it flow naturally like written content
+
+Transcript:
+${transcript}
+
+Return only the cleaned transcript, nothing else.`
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Claude API error for transcript cleaning:', errorData);
+      return res.status(response.status).json({ 
+        error: `Failed to clean transcript: ${errorData.error?.message || 'Unknown error'}` 
+      });
+    }
+
+    const data = await response.json();
+    const cleanedTranscript = data.content[0].text.trim();
+    
+    res.json({ cleanedTranscript });
+
+  } catch (error) {
+    console.error('Error cleaning transcript:', error);
+    res.status(500).json({ error: 'Failed to clean transcript' });
+  }
+});
+
 // Generate content endpoint
 app.post('/api/generate-content', async (req, res) => {
   try {
@@ -53,14 +117,14 @@ app.post('/api/generate-content', async (req, res) => {
         messages: [
           {
             role: "user",
-            content: `Based on this video transcript, generate the following content in JSON format:
+            content: `Based on this clean, formatted video transcript, generate the following content in JSON format:
 
 1. SEO-optimized title (60 characters max)
 2. Meta description (150 characters max)
 3. 5 FAQs with schema markup ready for WordPress
 4. 4 key takeaways that are SEO-focused
 
-Transcript: ${transcript}
+Clean Transcript: ${transcript}
 
 Video Title Context: ${videoTitle || 'Video content'}
 

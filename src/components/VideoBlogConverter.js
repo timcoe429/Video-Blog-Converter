@@ -5,6 +5,7 @@ const VideoBlogConverter = () => {
   const [url, setUrl] = useState('');
   const [transcript, setTranscript] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState('');
   const [results, setResults] = useState(null);
 
   // Extract YouTube video ID from URL
@@ -13,38 +14,31 @@ const VideoBlogConverter = () => {
     return match ? match[1] : null;
   };
 
-  // Format transcript for readability
-  const formatTranscript = (text) => {
+  // Clean transcript using AI
+  const formatTranscript = async (text) => {
     if (!text) return '';
     
-    let formatted = text
-      // First, normalize line breaks and clean up spacing
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+    try {
+      setProcessingStep('🤖 Cleaning transcript with AI...');
+      const response = await fetch('/api/clean-transcript', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcript: text })
+      });
 
-    // Add proper paragraph breaks after sentences
-    formatted = formatted
-      .replace(/([.!?])\s+([A-Z])/g, '$1\n\n$2')
-      // Format speaker labels and names
-      .replace(/([A-Z][a-z]+ [A-Z][a-z]+:)/g, '\n\n**$1**\n')
-      .replace(/Speaker \d+:/gi, (match) => `\n\n**${match}**\n`)
-      // Format section headers (words that appear alone on a line)
-      .replace(/\n([A-Z][a-zA-Z\s]{2,20})\n/g, '\n\n## $1\n\n')
-      // Format timestamps
-      .replace(/(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})/g, '\n\n**[$1]**\n')
-      // Clean up and ensure proper spacing
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/^\n+/, '')
-      .replace(/\n+$/, '');
+      if (!response.ok) {
+        console.error('Failed to clean transcript, using original');
+        return text;
+      }
 
-    // Split into paragraphs and clean each one
-    const paragraphs = formatted.split('\n\n')
-      .filter(p => p.trim().length > 0)
-      .map(p => p.trim());
-
-    return paragraphs.join('\n\n');
+      const data = await response.json();
+      return data.cleanedTranscript || text;
+    } catch (error) {
+      console.error('Error cleaning transcript:', error);
+      return text;
+    }
   };
 
   // Generate content using backend API
@@ -81,6 +75,8 @@ const VideoBlogConverter = () => {
     }
 
     setProcessing(true);
+    setProcessingStep('🔍 Extracting video information...');
+    
     try {
       const videoId = extractVideoId(url);
       if (!videoId) {
@@ -88,16 +84,19 @@ const VideoBlogConverter = () => {
       }
 
       // Format the transcript
-      const formattedTranscript = formatTranscript(transcript);
+      const formattedTranscript = await formatTranscript(transcript);
       
       // Generate video title from URL or use default
       const videoTitle = `Video Content - ${videoId}`;
       
-      // Generate content using Claude
-      const generatedContent = await generateContent(transcript, videoTitle);
+      setProcessingStep('✨ Generating SEO content with AI...');
+      // Generate content using Claude (use the CLEANED transcript)
+      const generatedContent = await generateContent(formattedTranscript, videoTitle);
       
       // Prepare results
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      
+      setProcessingStep('📝 Finalizing content...');
       
       setResults({
         videoId,
@@ -114,6 +113,7 @@ const VideoBlogConverter = () => {
       alert(`Error: ${error.message}`);
     } finally {
       setProcessing(false);
+      setProcessingStep('');
     }
   };
 
@@ -139,7 +139,7 @@ ${JSON.stringify(schema, null, 2)}
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    // Removed annoying alert - copy happens silently
   };
 
   const downloadThumbnail = async () => {
@@ -215,7 +215,12 @@ ${JSON.stringify(schema, null, 2)}
               {processing ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Processing...
+                  <div className="flex flex-col items-center">
+                    <span>Processing...</span>
+                    {processingStep && (
+                      <span className="text-xs text-blue-100 mt-1">{processingStep}</span>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
