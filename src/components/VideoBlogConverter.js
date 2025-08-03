@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Copy, Download, Video, FileText, Tag, MessageSquare } from 'lucide-react';
+import { Copy, Download, Video, FileText, Tag, MessageSquare, CheckCircle, Clock, XCircle, Loader2, X } from 'lucide-react';
 
 const VideoBlogConverter = () => {
   const [url, setUrl] = useState('');
   const [transcript, setTranscript] = useState('');
   const [processing, setProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
+  const [processingSteps, setProcessingSteps] = useState([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [results, setResults] = useState(null);
 
   // Extract YouTube video ID from URL
@@ -72,6 +74,60 @@ const VideoBlogConverter = () => {
     }
   };
 
+  const initializeProcessingSteps = () => {
+    const steps = [
+      {
+        id: 'validate',
+        title: 'Validating Input',
+        description: 'Checking YouTube URL and transcript...',
+        status: 'pending'
+      },
+      {
+        id: 'extract',
+        title: 'Extracting Video Info',
+        description: 'Getting video ID and thumbnail information...',
+        status: 'pending'
+      },
+      {
+        id: 'clean',
+        title: 'AI Transcript Cleaning',
+        description: 'Formatting transcript with Claude AI for readability...',
+        status: 'pending'
+      },
+      {
+        id: 'generate',
+        title: 'Generating SEO Content',
+        description: 'Creating title, meta description, FAQs, and takeaways...',
+        status: 'pending'
+      },
+      {
+        id: 'finalize',
+        title: 'Finalizing Content',
+        description: 'Preparing schema markup and organizing results...',
+        status: 'pending'
+      }
+    ];
+    setProcessingSteps(steps);
+    setCurrentStepIndex(0);
+  };
+
+  const updateStep = (stepId, status, description = null) => {
+    setProcessingSteps(prev => {
+      const newSteps = prev.map(step => 
+        step.id === stepId 
+          ? { ...step, status, ...(description && { description }) }
+          : step
+      );
+      
+      if (status === 'active') {
+        const stepIndex = newSteps.findIndex(step => step.id === stepId);
+        setCurrentStepIndex(stepIndex);
+      }
+      
+      return newSteps;
+    });
+  };
+
   const handleProcess = async () => {
     if (!url || !transcript) {
       alert('Please provide both URL and transcript');
@@ -79,29 +135,40 @@ const VideoBlogConverter = () => {
     }
 
     setProcessing(true);
-    setProcessingStep('🔍 Extracting video information...');
-    
+    initializeProcessingSteps();
+
     try {
+      // Step 1: Validate
+      updateStep('validate', 'active');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const videoId = extractVideoId(url);
       if (!videoId) {
         throw new Error('Invalid YouTube URL');
       }
+      updateStep('validate', 'completed');
 
-      // Format the transcript
-      const formattedTranscript = await formatTranscript(transcript);
-      
-      // Generate video title from URL or use default
+      // Step 2: Extract video info
+      updateStep('extract', 'active');
+      await new Promise(resolve => setTimeout(resolve, 300));
       const videoTitle = `Video Content - ${videoId}`;
-      
-      setProcessingStep('✨ Generating SEO content with AI...');
-      // Generate content using Claude (use the CLEANED transcript)
-      const generatedContent = await generateContent(formattedTranscript, videoTitle);
-      
-      // Prepare results
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      
-      setProcessingStep('📝 Finalizing content...');
-      
+      updateStep('extract', 'completed');
+
+      // Step 3: Clean transcript
+      updateStep('clean', 'active', 'Processing transcript with Claude AI...');
+      const formattedTranscript = await formatTranscript(transcript);
+      updateStep('clean', 'completed');
+
+      // Step 4: Generate content
+      updateStep('generate', 'active', 'Generating SEO content with Claude AI...');
+      const generatedContent = await generateContent(formattedTranscript, videoTitle);
+      updateStep('generate', 'completed');
+
+      // Step 5: Finalize
+      updateStep('finalize', 'active');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       setResults({
         videoId,
         formattedTranscript,
@@ -113,11 +180,36 @@ const VideoBlogConverter = () => {
         schemaMarkup: generatedContent.schemaMarkup || generateFAQSchema(generatedContent.faqs)
       });
 
+      updateStep('finalize', 'completed');
+      
+      // Small delay before closing modal
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      // Mark current step as failed
+      setProcessingSteps(prev => {
+        const currentStep = prev[currentStepIndex];
+        if (currentStep) {
+          return prev.map(step => 
+            step.id === currentStep.id 
+              ? { ...step, status: 'failed', description: `Error: ${error.message}` }
+              : step
+          );
+        }
+        return prev;
+      });
+      
+      // Show error after a delay
+      setTimeout(() => {
+        alert(`Error: ${error.message}`);
+      }, 1500);
     } finally {
-      setProcessing(false);
-      setProcessingStep('');
+      setTimeout(() => {
+        setProcessing(false);
+        setProcessingStep('');
+        setProcessingSteps([]);
+        setCurrentStepIndex(0);
+      }, 1500);
     }
   };
 
@@ -179,6 +271,89 @@ ${JSON.stringify(schema, null, 2)}
     }
   };
 
+  // Processing Modal Component
+  const ProcessingModal = () => {
+    if (!processing) return null;
+
+    const getStepIcon = (status) => {
+      switch (status) {
+        case 'completed':
+          return <CheckCircle className="h-6 w-6 text-green-500" />;
+        case 'active':
+          return <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />;
+        case 'failed':
+          return <XCircle className="h-6 w-6 text-red-500" />;
+        default:
+          return <Clock className="h-6 w-6 text-gray-400" />;
+      }
+    };
+
+    const getProgressPercentage = () => {
+      const completedSteps = processingSteps.filter(step => step.status === 'completed').length;
+      return (completedSteps / processingSteps.length) * 100;
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">Processing Your Content</h3>
+            <Video className="h-6 w-6 text-blue-600" />
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Progress</span>
+              <span>{Math.round(getProgressPercentage())}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${getProgressPercentage()}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Processing Steps */}
+          <div className="space-y-4">
+            {processingSteps.map((step, index) => (
+              <div key={step.id} className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  {getStepIcon(step.status)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${
+                    step.status === 'active' ? 'text-blue-600' : 
+                    step.status === 'completed' ? 'text-green-600' :
+                    step.status === 'failed' ? 'text-red-600' : 'text-gray-500'
+                  }`}>
+                    {step.title}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Current Activity */}
+          {processingSteps.length > 0 && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                <span className="text-sm text-blue-700 font-medium">
+                  {processingSteps.find(step => step.status === 'active')?.title || 'Initializing...'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -223,13 +398,8 @@ ${JSON.stringify(schema, null, 2)}
             >
               {processing ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <div className="flex flex-col items-center">
-                    <span>Processing...</span>
-                    {processingStep && (
-                      <span className="text-xs text-blue-100 mt-1">{processingStep}</span>
-                    )}
-                  </div>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processing...
                 </>
               ) : (
                 <>
@@ -343,7 +513,7 @@ ${JSON.stringify(schema, null, 2)}
                     className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
                   >
                     <Copy className="h-4 w-4" />
-                    {copiedStates.schema ? 'HTML Copied!' : 'Copy Schema Markup'}
+                    {copiedStates.schema ? 'FAQ HTML Copied!' : 'Copy FAQ Section'}
                   </button>
                 </div>
                 
@@ -357,7 +527,7 @@ ${JSON.stringify(schema, null, 2)}
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">HTML Schema Markup (Copy to WordPress HTML block)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">FAQ Section with Schema Markup (Copy to WordPress HTML block)</label>
                   <textarea
                     value={results.schemaMarkup}
                     readOnly
@@ -392,6 +562,9 @@ ${JSON.stringify(schema, null, 2)}
           )}
         </div>
       </div>
+      
+      {/* Processing Modal */}
+      <ProcessingModal />
     </div>
   );
 };

@@ -72,7 +72,7 @@ app.post('/api/clean-transcript', async (req, res) => {
     
     const response = await makeClaudeRequest({
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 4000,
+      max_tokens: 50000,
       messages: [
         {
           role: "user",
@@ -160,7 +160,7 @@ app.post('/api/generate-content', async (req, res) => {
     
     const response = await makeClaudeRequest({
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 4000,
+      max_tokens: 20000,
       messages: [
         {
           role: "user",
@@ -168,7 +168,7 @@ app.post('/api/generate-content', async (req, res) => {
 
 1. SEO-optimized title (60 characters max)
 2. Meta description (150 characters max)
-3. 5 FAQs with HTML schema markup ready for WordPress
+3. 5 FAQs with proper HTML schema markup
 4. 4 key takeaways that are SEO-focused
 
 Clean Transcript: ${transcript}
@@ -188,17 +188,18 @@ Return ONLY a valid JSON object with this structure:
   "keyTakeaways": [
     "string"
   ],
-  "schemaMarkup": "string containing complete HTML FAQ schema markup ready to paste into WordPress HTML block"
+  "schemaMarkup": "string containing HTML FAQ section with schema.org microdata"
 }
 
-IMPORTANT: The schemaMarkup field must be HTML format like:
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [...]
-}
-</script>
+IMPORTANT: The schemaMarkup field must be HTML FAQ section with microdata like:
+<div itemscope itemtype="https://schema.org/FAQPage">
+  <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+    <h3 itemprop="name">Question here?</h3>
+    <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+      <p itemprop="text">Answer here</p>
+    </div>
+  </div>
+</div>
 
 DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
         }
