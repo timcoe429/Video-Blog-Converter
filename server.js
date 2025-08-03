@@ -71,8 +71,8 @@ app.post('/api/clean-transcript', async (req, res) => {
     console.log('API Key format check:', process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-'));
     
     const response = await makeClaudeRequest({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 50000,
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 32000,
       messages: [
         {
           role: "user",
@@ -159,8 +159,8 @@ app.post('/api/generate-content', async (req, res) => {
     console.log('Transcript length:', transcript.length);
     
     const response = await makeClaudeRequest({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 20000,
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 32000,
       messages: [
         {
           role: "user",
