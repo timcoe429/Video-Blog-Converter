@@ -141,9 +141,14 @@ ${JSON.stringify(schema, null, 2)}
 </script>`;
   };
 
-  const copyToClipboard = (text) => {
+  const [copiedStates, setCopiedStates] = useState({});
+
+  const copyToClipboard = (text, buttonId) => {
     navigator.clipboard.writeText(text);
-    // Removed annoying alert - copy happens silently
+    setCopiedStates(prev => ({ ...prev, [buttonId]: true }));
+    setTimeout(() => {
+      setCopiedStates(prev => ({ ...prev, [buttonId]: false }));
+    }, 2000);
   };
 
   const downloadThumbnail = async () => {
@@ -255,10 +260,11 @@ ${JSON.stringify(schema, null, 2)}
                         className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md"
                       />
                       <button
-                        onClick={() => copyToClipboard(results.seoTitle)}
+                        onClick={() => copyToClipboard(results.seoTitle, 'seoTitle')}
                         className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
                       >
                         <Copy className="h-4 w-4" />
+                        {copiedStates.seoTitle ? 'Copied!' : ''}
                       </button>
                     </div>
                   </div>
@@ -273,10 +279,11 @@ ${JSON.stringify(schema, null, 2)}
                         className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md"
                       />
                       <button
-                        onClick={() => copyToClipboard(results.metaDescription)}
+                        onClick={() => copyToClipboard(results.metaDescription, 'metaDescription')}
                         className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
                       >
                         <Copy className="h-4 w-4" />
+                        {copiedStates.metaDescription ? 'Copied!' : ''}
                       </button>
                     </div>
                   </div>
@@ -291,11 +298,11 @@ ${JSON.stringify(schema, null, 2)}
                 </h2>
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => copyToClipboard(results.formattedTranscript)}
+                    onClick={() => copyToClipboard(results.formattedTranscript, 'transcript')}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
                   >
                     <Copy className="h-4 w-4" />
-                    Copy Transcript
+                    {copiedStates.transcript ? 'Text Copied!' : 'Copy Transcript'}
                   </button>
                 </div>
                 <div className="bg-white p-4 rounded border max-h-96 overflow-y-auto">
@@ -308,11 +315,11 @@ ${JSON.stringify(schema, null, 2)}
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Takeaways</h2>
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => copyToClipboard(results.keyTakeaways.map((item, i) => `${i + 1}. ${item}`).join('\n'))}
+                    onClick={() => copyToClipboard(results.keyTakeaways.map((item, i) => `${i + 1}. ${item}`).join('\n'), 'takeaways')}
                     className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2"
                   >
                     <Copy className="h-4 w-4" />
-                    Copy All Takeaways
+                    {copiedStates.takeaways ? 'Text Copied!' : 'Copy All Takeaways'}
                   </button>
                 </div>
                 <div className="bg-white p-4 rounded border">
@@ -332,11 +339,11 @@ ${JSON.stringify(schema, null, 2)}
                 </h2>
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => copyToClipboard(results.schemaMarkup)}
+                    onClick={() => copyToClipboard(results.schemaMarkup, 'schema')}
                     className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
                   >
                     <Copy className="h-4 w-4" />
-                    Copy Schema Markup
+                    {copiedStates.schema ? 'HTML Copied!' : 'Copy Schema Markup'}
                   </button>
                 </div>
                 
@@ -350,7 +357,7 @@ ${JSON.stringify(schema, null, 2)}
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Schema Markup (Copy to WordPress text block)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">HTML Schema Markup (Copy to WordPress HTML block)</label>
                   <textarea
                     value={results.schemaMarkup}
                     readOnly

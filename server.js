@@ -76,19 +76,27 @@ app.post('/api/clean-transcript', async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Clean up this video transcript for blog readability. Make it professional and easy to read:
+          content: `Format this video transcript for blog readability while preserving ALL original transcribed content:
 
-1. Fix grammar, punctuation, and capitalization
-2. Remove filler words (um, uh, you know, etc.)
-3. Add proper paragraph breaks
-4. Format speaker names clearly with proper labels
-5. Keep the meaning exactly the same
-6. Make it flow naturally like written content
+FORMATTING REQUIREMENTS:
+1. Identify speakers and format as "Speaker Name:" 
+2. Organize into logical sections with clear headings
+3. Remove filler words (um, uh, you know, like, etc.)
+4. Fix punctuation, capitalization, and obvious typos
+5. Add proper paragraph breaks for readability
 
-Transcript:
+CRITICAL: Keep ALL the original transcribed words and content. Do NOT:
+- Summarize or paraphrase anything
+- Add new words or phrases not in the original
+- Change the meaning or flow of what was actually said
+- Skip any content from the original transcript
+
+The goal is to make the EXACT transcribed content readable and well-organized, not to rewrite it.
+
+Raw transcript:
 ${transcript}
 
-Return only the cleaned transcript, nothing else.`
+Return the cleaned and formatted transcript with proper speaker identification and structure.`
         }
       ]
     });
@@ -156,11 +164,11 @@ app.post('/api/generate-content', async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Based on this clean, formatted video transcript, generate the following content in JSON format:
+                               content: `Based on this clean, formatted video transcript, generate the following content in JSON format:
 
 1. SEO-optimized title (60 characters max)
 2. Meta description (150 characters max)
-3. 5 FAQs with schema markup ready for WordPress
+3. 5 FAQs with HTML schema markup ready for WordPress
 4. 4 key takeaways that are SEO-focused
 
 Clean Transcript: ${transcript}
@@ -180,8 +188,17 @@ Return ONLY a valid JSON object with this structure:
   "keyTakeaways": [
     "string"
   ],
-  "schemaMarkup": "string containing complete FAQ schema for WordPress"
+  "schemaMarkup": "string containing complete HTML FAQ schema markup ready to paste into WordPress HTML block"
 }
+
+IMPORTANT: The schemaMarkup field must be HTML format like:
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [...]
+}
+</script>
 
 DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
         }
