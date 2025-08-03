@@ -2,18 +2,24 @@
   "name": "video-blog-converter",
   "version": "1.0.0",
   "description": "Convert video transcripts to blog-ready content",
-  "main": "src/index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node server.js",
+    "dev": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node server.js",
+    "railway-build": "npm run build"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "lucide-react": "^0.263.1"
+    "lucide-react": "^0.263.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
   },
   "browserslist": {
     "production": [

@@ -29,63 +29,30 @@ const VideoBlogConverter = () => {
     return formatted;
   };
 
-  // Generate content using Claude API
+  // Generate content using backend API
   const generateContent = async (transcript, videoTitle) => {
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/generate-content", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2000,
-          messages: [
-            {
-              role: "user",
-              content: `Based on this video transcript, generate the following content in JSON format:
-
-1. SEO-optimized title (60 characters max)
-2. Meta description (150 characters max)
-3. 5 FAQs with schema markup ready for WordPress
-4. 4 key takeaways that are SEO-focused
-
-Transcript: ${transcript}
-
-Video Title Context: ${videoTitle || 'Video content'}
-
-Return ONLY a valid JSON object with this structure:
-{
-  "seoTitle": "string",
-  "metaDescription": "string", 
-  "faqs": [
-    {
-      "question": "string",
-      "answer": "string"
-    }
-  ],
-  "keyTakeaways": [
-    "string"
-  ],
-  "schemaMarkup": "string containing complete FAQ schema for WordPress"
-}
-
-DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
-            }
-          ]
+          transcript,
+          videoTitle
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate content');
+      }
+
       const data = await response.json();
-      let responseText = data.content[0].text;
-      
-      // Clean up any markdown formatting
-      responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      
-      return JSON.parse(responseText);
+      return data;
     } catch (error) {
       console.error('Error generating content:', error);
-      throw new Error('Failed to generate content');
+      throw new Error(error.message || 'Failed to generate content');
     }
   };
 
