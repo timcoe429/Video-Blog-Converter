@@ -15,18 +15,36 @@ const VideoBlogConverter = () => {
 
   // Format transcript for readability
   const formatTranscript = (text) => {
-    // Split into paragraphs based on natural breaks
+    if (!text) return '';
+    
     let formatted = text
-      .replace(/\n+/g, '\n') // Normalize line breaks
-      .replace(/([.!?])\s+/g, '$1\n\n') // Add paragraph breaks after sentences
-      .replace(/Speaker \d+:/gi, (match) => `\n\n**${match}**`) // Format speaker labels
-      .replace(/(\d{2}:\d{2}:\d{2}|\d{1,2}:\d{2})/g, '\n\n**[$1]**') // Format timestamps
-      .split('\n\n')
-      .filter(p => p.trim().length > 0)
-      .map(p => p.trim())
-      .join('\n\n');
+      // First, normalize line breaks and clean up spacing
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
 
-    return formatted;
+    // Add proper paragraph breaks after sentences
+    formatted = formatted
+      .replace(/([.!?])\s+([A-Z])/g, '$1\n\n$2')
+      // Format speaker labels and names
+      .replace(/([A-Z][a-z]+ [A-Z][a-z]+:)/g, '\n\n**$1**\n')
+      .replace(/Speaker \d+:/gi, (match) => `\n\n**${match}**\n`)
+      // Format section headers (words that appear alone on a line)
+      .replace(/\n([A-Z][a-zA-Z\s]{2,20})\n/g, '\n\n## $1\n\n')
+      // Format timestamps
+      .replace(/(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})/g, '\n\n**[$1]**\n')
+      // Clean up and ensure proper spacing
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/^\n+/, '')
+      .replace(/\n+$/, '');
+
+    // Split into paragraphs and clean each one
+    const paragraphs = formatted.split('\n\n')
+      .filter(p => p.trim().length > 0)
+      .map(p => p.trim());
+
+    return paragraphs.join('\n\n');
   };
 
   // Generate content using backend API
@@ -124,16 +142,32 @@ ${JSON.stringify(schema, null, 2)}
     alert('Copied to clipboard!');
   };
 
-  const downloadThumbnail = () => {
+  const downloadThumbnail = async () => {
     if (!results) return;
     
-    const link = document.createElement('a');
-    link.href = results.thumbnailUrl;
-    link.download = `${results.seoTitle.replace(/[^a-zA-Z0-9]/g, '-')}.jpg`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(results.thumbnailUrl);
+      if (!response.ok) throw new Error('Failed to fetch image');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${results.seoTitle.replace(/[^a-zA-Z0-9\s]/g, '-').replace(/\s+/g, '-')}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading thumbnail:', error);
+      // Fallback to opening in new tab if download fails
+      window.open(results.thumbnailUrl, '_blank');
+    }
   };
 
   return (
