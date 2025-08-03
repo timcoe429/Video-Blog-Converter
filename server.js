@@ -4,8 +4,14 @@ const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
 
+// Add fetch for Node.js (for Node.js versions < 18)
+if (!globalThis.fetch) {
+  const fetch = require('node-fetch');
+  globalThis.fetch = fetch;
+}
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -29,9 +35,11 @@ app.post('/api/generate-content', async (req, res) => {
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('ANTHROPIC_API_KEY not configured');
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
+    console.log('Making request to Claude API...');
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -41,7 +49,7 @@ app.post('/api/generate-content', async (req, res) => {
       },
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20241022",
-        max_tokens: 2000,
+        max_tokens: 4000,
         messages: [
           {
             role: "user",
@@ -79,10 +87,19 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Anthropic API error:', errorData);
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = { error: { message: 'Failed to parse error response' } };
+      }
+      console.error('Anthropic API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
       return res.status(response.status).json({ 
-        error: `API request failed: ${errorData.error?.message || 'Unknown error'}` 
+        error: `API request failed (${response.status}): ${errorData.error?.message || errorData.message || 'Unknown error'}` 
       });
     }
 
@@ -122,7 +139,14 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Anthropic API Key configured: ${!!process.env.ANTHROPIC_API_KEY}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔑 Anthropic API Key configured: ${!!process.env.ANTHROPIC_API_KEY}`);
+  console.log(`📂 Build directory exists: ${fs.existsSync(path.join(__dirname, 'build'))}`);
+  
+  // Test API key format
+  if (process.env.ANTHROPIC_API_KEY) {
+    const keyStart = process.env.ANTHROPIC_API_KEY.substring(0, 10);
+    console.log(`🔍 API Key starts with: ${keyStart}...`);
+  }
 });
