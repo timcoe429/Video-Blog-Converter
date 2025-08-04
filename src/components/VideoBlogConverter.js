@@ -294,23 +294,26 @@ ${JSON.stringify(schema, null, 2)}
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+      <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 border border-cyan-500/50" style={{boxShadow: '0 0 50px rgba(6, 182, 212, 0.4)'}}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">Processing Your Content</h3>
-            <Video className="h-6 w-6 text-blue-600" />
+            <h3 className="text-xl font-semibold text-cyan-100" style={{textShadow: '0 0 10px rgba(6, 182, 212, 0.5)'}}>Processing Your Content</h3>
+            <Video className="h-6 w-6 text-cyan-400" style={{filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.8))'}} />
           </div>
           
           {/* Progress Bar */}
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="flex justify-between text-sm text-cyan-300 mb-2">
               <span>Progress</span>
               <span>{Math.round(getProgressPercentage())}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-700 rounded-full h-2">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${getProgressPercentage()}%` }}
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ 
+                  width: `${getProgressPercentage()}%`,
+                  boxShadow: '0 0 10px rgba(6, 182, 212, 0.8)'
+                }}
               ></div>
             </div>
           </div>
@@ -324,13 +327,17 @@ ${JSON.stringify(schema, null, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-medium ${
-                    step.status === 'active' ? 'text-blue-600' : 
-                    step.status === 'completed' ? 'text-green-600' :
-                    step.status === 'failed' ? 'text-red-600' : 'text-gray-500'
-                  }`}>
+                    step.status === 'active' ? 'text-cyan-400' : 
+                    step.status === 'completed' ? 'text-green-400' :
+                    step.status === 'failed' ? 'text-red-400' : 'text-gray-400'
+                  }`} style={{
+                    textShadow: step.status === 'active' ? '0 0 5px rgba(6, 182, 212, 0.5)' : 
+                               step.status === 'completed' ? '0 0 5px rgba(34, 197, 94, 0.5)' : 
+                               step.status === 'failed' ? '0 0 5px rgba(239, 68, 68, 0.5)' : 'none'
+                  }}>
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-400 mt-1">
                     {step.description}
                   </p>
                 </div>
@@ -340,10 +347,10 @@ ${JSON.stringify(schema, null, 2)}
 
           {/* Current Activity */}
           {processingSteps.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mt-6 p-4 bg-cyan-900/30 rounded-lg border border-cyan-500/30">
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-                <span className="text-sm text-blue-700 font-medium">
+                <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" style={{filter: 'drop-shadow(0 0 5px rgba(6, 182, 212, 0.8))'}} />
+                <span className="text-sm text-cyan-300 font-medium">
                   {processingSteps.find(step => step.status === 'active')?.title || 'Initializing...'}
                 </span>
               </div>
@@ -355,18 +362,18 @@ ${JSON.stringify(schema, null, 2)}
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-black py-8" style={{background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)'}}>
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-gray-900 rounded-lg shadow-2xl p-6 border border-cyan-500/30" style={{boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)'}}>
           <div className="text-center mb-8">
-            <Video className="mx-auto h-12 w-12 text-blue-600 mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Video to Blog Converter</h1>
-            <p className="text-gray-600">Transform your video transcripts into blog-ready content</p>
+            <Video className="mx-auto h-12 w-12 text-cyan-400 mb-4" style={{filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.8))'}} />
+            <h1 className="text-3xl font-bold text-cyan-100 mb-2" style={{textShadow: '0 0 20px rgba(6, 182, 212, 0.5)'}}>Video to Blog Converter</h1>
+            <p className="text-cyan-300">Transform your video transcripts into blog-ready content</p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cyan-300 mb-2">
                 YouTube URL
               </label>
               <input
@@ -374,12 +381,13 @@ ${JSON.stringify(schema, null, 2)}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-800 border border-cyan-500/50 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 text-cyan-100 placeholder-cyan-600"
+                style={{boxShadow: 'inset 0 0 10px rgba(6, 182, 212, 0.1)'}}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-cyan-300 mb-2">
                 Video Transcript
               </label>
               <textarea
@@ -387,14 +395,16 @@ ${JSON.stringify(schema, null, 2)}
                 onChange={(e) => setTranscript(e.target.value)}
                 placeholder="Paste your video transcript here..."
                 rows={10}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-800 border border-cyan-500/50 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 text-cyan-100 placeholder-cyan-600"
+                style={{boxShadow: 'inset 0 0 10px rgba(6, 182, 212, 0.1)'}}
               />
             </div>
 
             <button
               onClick={handleProcess}
               disabled={processing}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-3 px-4 rounded-md hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300"
+              style={{boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'}}
             >
               {processing ? (
                 <>
@@ -413,25 +423,26 @@ ${JSON.stringify(schema, null, 2)}
           {results && (
             <div className="mt-12 space-y-8">
               {/* SEO Section */}
-              <div className="bg-green-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Tag className="h-5 w-5" />
+              <div className="bg-gray-800 p-6 rounded-lg border border-green-500/30" style={{boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)'}}>
+                <h2 className="text-xl font-semibold text-green-400 mb-4 flex items-center gap-2" style={{textShadow: '0 0 10px rgba(34, 197, 94, 0.5)'}}>
+                  <Tag className="h-5 w-5" style={{filter: 'drop-shadow(0 0 5px rgba(34, 197, 94, 0.8))'}} />
                   SEO Content
                 </h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">SEO Title</label>
+                    <label className="block text-sm font-medium text-green-300 mb-1">SEO Title</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={results.seoTitle}
                         readOnly
-                        className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md"
+                        className="flex-1 px-3 py-2 bg-gray-900 border border-green-500/50 rounded-md text-green-100"
                       />
                       <button
                         onClick={() => copyToClipboard(results.seoTitle, 'seoTitle')}
-                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
+                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 flex items-center gap-1 transition-all duration-300"
+                        style={{boxShadow: '0 0 10px rgba(34, 197, 94, 0.4)'}}
                       >
                         <Copy className="h-4 w-4" />
                         {copiedStates.seoTitle ? 'Copied!' : ''}
@@ -440,17 +451,18 @@ ${JSON.stringify(schema, null, 2)}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                    <label className="block text-sm font-medium text-green-300 mb-1">Meta Description</label>
                     <div className="flex gap-2">
                       <textarea
                         value={results.metaDescription}
                         readOnly
                         rows={2}
-                        className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md"
+                        className="flex-1 px-3 py-2 bg-gray-900 border border-green-500/50 rounded-md text-green-100"
                       />
                       <button
                         onClick={() => copyToClipboard(results.metaDescription, 'metaDescription')}
-                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-1"
+                        className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 flex items-center gap-1 transition-all duration-300"
+                        style={{boxShadow: '0 0 10px rgba(34, 197, 94, 0.4)'}}
                       >
                         <Copy className="h-4 w-4" />
                         {copiedStates.metaDescription ? 'Copied!' : ''}
@@ -461,56 +473,59 @@ ${JSON.stringify(schema, null, 2)}
               </div>
 
               {/* Formatted Transcript */}
-              <div className="bg-blue-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
+              <div className="bg-gray-800 p-6 rounded-lg border border-blue-500/30" style={{boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)'}}>
+                <h2 className="text-xl font-semibold text-blue-400 mb-4 flex items-center gap-2" style={{textShadow: '0 0 10px rgba(59, 130, 246, 0.5)'}}>
+                  <FileText className="h-5 w-5" style={{filter: 'drop-shadow(0 0 5px rgba(59, 130, 246, 0.8))'}} />
                   Formatted Transcript
                 </h2>
                 <div className="flex gap-2 mb-4">
                   <button
                     onClick={() => copyToClipboard(results.formattedTranscript, 'transcript')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 flex items-center gap-2 transition-all duration-300"
+                    style={{boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'}}
                   >
                     <Copy className="h-4 w-4" />
                     {copiedStates.transcript ? 'Text Copied!' : 'Copy Transcript'}
                   </button>
                 </div>
-                <div className="bg-white p-4 rounded border max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800">{results.formattedTranscript}</pre>
+                <div className="bg-gray-900 p-4 rounded border border-blue-500/30 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-blue-100">{results.formattedTranscript}</pre>
                 </div>
               </div>
 
               {/* Key Takeaways */}
-              <div className="bg-yellow-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Takeaways</h2>
+              <div className="bg-gray-800 p-6 rounded-lg border border-yellow-500/30" style={{boxShadow: '0 0 20px rgba(234, 179, 8, 0.2)'}}>
+                <h2 className="text-xl font-semibold text-yellow-400 mb-4" style={{textShadow: '0 0 10px rgba(234, 179, 8, 0.5)'}}>Key Takeaways</h2>
                 <div className="flex gap-2 mb-4">
                   <button
                     onClick={() => copyToClipboard(results.keyTakeaways.map((item, i) => `${i + 1}. ${item}`).join('\n'), 'takeaways')}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-500 flex items-center gap-2 transition-all duration-300"
+                    style={{boxShadow: '0 0 10px rgba(234, 179, 8, 0.4)'}}
                   >
                     <Copy className="h-4 w-4" />
                     {copiedStates.takeaways ? 'Text Copied!' : 'Copy All Takeaways'}
                   </button>
                 </div>
-                <div className="bg-white p-4 rounded border">
+                <div className="bg-gray-900 p-4 rounded border border-yellow-500/30">
                   <ol className="list-decimal list-inside space-y-2">
                     {results.keyTakeaways.map((takeaway, index) => (
-                      <li key={index} className="text-gray-800">{takeaway}</li>
+                      <li key={index} className="text-yellow-100">{takeaway}</li>
                     ))}
                   </ol>
                 </div>
               </div>
 
               {/* FAQs */}
-              <div className="bg-purple-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
+              <div className="bg-gray-800 p-6 rounded-lg border border-purple-500/30" style={{boxShadow: '0 0 20px rgba(147, 51, 234, 0.2)'}}>
+                <h2 className="text-xl font-semibold text-purple-400 mb-4 flex items-center gap-2" style={{textShadow: '0 0 10px rgba(147, 51, 234, 0.5)'}}>
+                  <MessageSquare className="h-5 w-5" style={{filter: 'drop-shadow(0 0 5px rgba(147, 51, 234, 0.8))'}} />
                   FAQs with Schema
                 </h2>
                 <div className="flex gap-2 mb-4">
                   <button
                     onClick={() => copyToClipboard(results.schemaMarkup, 'schema')}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-500 flex items-center gap-2 transition-all duration-300"
+                    style={{boxShadow: '0 0 10px rgba(147, 51, 234, 0.4)'}}
                   >
                     <Copy className="h-4 w-4" />
                     {copiedStates.schema ? 'FAQ HTML Copied!' : 'Copy FAQ Section'}
@@ -519,42 +534,44 @@ ${JSON.stringify(schema, null, 2)}
                 
                 <div className="space-y-4">
                   {results.faqs.map((faq, index) => (
-                    <div key={index} className="bg-white p-4 rounded border">
-                      <h3 className="font-semibold text-gray-900 mb-2">Q: {faq.question}</h3>
-                      <p className="text-gray-700">A: {faq.answer}</p>
+                    <div key={index} className="bg-gray-900 p-4 rounded border border-purple-500/30">
+                      <h3 className="font-semibold text-purple-300 mb-2">Q: {faq.question}</h3>
+                      <p className="text-purple-100">A: {faq.answer}</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">FAQ Section with Schema Markup (Copy to WordPress HTML block)</label>
+                  <label className="block text-sm font-medium text-purple-300 mb-2">FAQ Section with Schema Markup (Copy to WordPress HTML block)</label>
                   <textarea
                     value={results.schemaMarkup}
                     readOnly
                     rows={8}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-xs font-mono"
+                    className="w-full px-3 py-2 bg-gray-900 border border-purple-500/50 rounded-md text-xs font-mono text-purple-100"
                   />
                 </div>
               </div>
 
               {/* Thumbnail Download */}
-              <div className="bg-red-50 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Video Thumbnail</h2>
+              <div className="bg-gray-800 p-6 rounded-lg border border-red-500/30" style={{boxShadow: '0 0 20px rgba(239, 68, 68, 0.2)'}}>
+                <h2 className="text-xl font-semibold text-red-400 mb-4" style={{textShadow: '0 0 10px rgba(239, 68, 68, 0.5)'}}>Video Thumbnail</h2>
                 <div className="flex items-center gap-4">
                   <img
                     src={results.thumbnailUrl}
                     alt="Video thumbnail"
-                    className="w-32 h-18 object-cover rounded border"
+                    className="w-32 h-18 object-cover rounded border border-red-500/50"
+                    style={{boxShadow: '0 0 10px rgba(239, 68, 68, 0.3)'}}
                   />
                   <button
                     onClick={downloadThumbnail}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 flex items-center gap-2 transition-all duration-300"
+                    style={{boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'}}
                   >
                     <Download className="h-4 w-4" />
                     Download Thumbnail
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-red-300 mt-2">
                   Filename: {results.seoTitle.replace(/[^a-zA-Z0-9]/g, '-')}.jpg
                 </p>
               </div>
