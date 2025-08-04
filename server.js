@@ -78,11 +78,17 @@ app.post('/api/clean-transcript', async (req, res) => {
           content: `Format this video transcript for blog readability while preserving ALL original transcribed content:
 
 FORMATTING REQUIREMENTS:
-1. Identify speakers and format as "Speaker Name:" 
-2. Organize into logical sections with clear headings
+1. Identify speakers and format as "**Speaker Name:**" 
+2. Organize into logical sections with section titles in BOLD TEXT ONLY (use **Section Title** format)
 3. Remove filler words (um, uh, you know, like, etc.)
 4. Fix punctuation, capitalization, and obvious typos
 5. Add proper paragraph breaks for readability
+
+CRITICAL FORMATTING RULES:
+- DO NOT use H1 headings (#) - this is bad for SEO
+- DO NOT use any markdown headings (##, ###, etc.)
+- Use ONLY bold text (**text**) for section titles if needed
+- Keep sections minimal - prefer natural paragraph flow
 
 CRITICAL: Keep ALL the original transcribed words and content. Do NOT:
 - Summarize or paraphrase anything
@@ -95,7 +101,7 @@ The goal is to make the EXACT transcribed content readable and well-organized, n
 Raw transcript:
 ${transcript}
 
-Return the cleaned and formatted transcript with proper speaker identification and structure.`
+Return the cleaned and formatted transcript with proper speaker identification and natural structure.`
         }
       ]
     });
