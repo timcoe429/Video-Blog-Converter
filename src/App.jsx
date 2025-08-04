@@ -1,5 +1,5 @@
 import React from 'react';
-import VideoBlogConverter from './components/VideoBlogConverter';
+import VideoBlogConverter from './components/VideoBlogConverter.jsx';
 
 function App() {
   return (
