@@ -158,24 +158,16 @@ app.post('/api/generate-content', async (req, res) => {
       messages: [
         {
           role: "user",
-                               content: `Based on this video transcript, generate SEO content. Read carefully to understand what the speaker is actually discussing.
+                               content: `Give me an SEO title and meta description for this transcribed video that I'm turning into a blog:
 
-Clean Transcript: ${transcript}
+${transcript}
 
-Video Title Context: ${videoTitle || 'Video content'}
-
-Generate:
-1. SEO-optimized title (60 characters max)
-2. Meta description (150 characters max)
-3. 5 FAQs with proper HTML schema markup
-4. 4 key takeaways that are SEO-focused
-
-Focus on the main topic and business discussed in the content, not the speaker's background or past experience.
+Now give me 5 relevant FAQs and 4 Key takeaways that are SEO Friendly and will help us rank for People also ask.
 
 Return ONLY a valid JSON object with this structure:
 {
-  "seoTitle": "string",
-  "metaDescription": "string", 
+  "seoTitle": "string (65 characters max)",
+  "metaDescription": "string (160 characters max)", 
   "faqs": [
     {
       "question": "string", 
