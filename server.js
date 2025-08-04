@@ -172,10 +172,10 @@ ${transcript}
 Requirements:
 - SEO title: Make it specific to what's actually discussed, not generic
 - Meta description: Based on the actual content and results mentioned
-- FAQs: Only create questions that can be directly answered from the transcript content
-- Key Takeaways: Only use specific details, numbers, and results actually mentioned
+- FAQs: Create detailed, comprehensive answers (2-3 sentences each) that can be directly answered from the transcript content. Include specific details, numbers, and context mentioned.
+- Key Takeaways: Write detailed takeaways (1-2 sentences each) using specific details, numbers, and results actually mentioned. Provide context and explanation.
 
-DO NOT make up information that isn't in the transcript.
+Make the FAQs and Key Takeaways substantial and informative for SEO value, but only use information that's actually in the transcript.
 
 Return ONLY a valid JSON object with this structure:
 {
