@@ -4,11 +4,7 @@ const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
 
-// Add fetch for Node.js (for Node.js versions < 18)
-if (!globalThis.fetch) {
-  const fetch = require('node-fetch');
-  globalThis.fetch = fetch;
-}
+// Node.js 18+ has native fetch support
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -17,8 +13,8 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files from React build
-const buildPath = path.join(__dirname, 'build');
+// Serve static files from Vite build
+const buildPath = path.join(__dirname, 'dist');
 if (fs.existsSync(buildPath)) {
   app.use(express.static(buildPath));
 } else {
@@ -272,7 +268,7 @@ app.get('/api/health', (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'build', 'index.html');
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
@@ -284,7 +280,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔑 OpenAI API Key configured: ${!!process.env.OPENAI_API_KEY}`);
-  console.log(`📂 Build directory exists: ${fs.existsSync(path.join(__dirname, 'build'))}`);
+  console.log(`📂 Build directory exists: ${fs.existsSync(path.join(__dirname, 'dist'))}`);
   
   // Test API key format
   if (process.env.OPENAI_API_KEY) {
