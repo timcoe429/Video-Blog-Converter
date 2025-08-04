@@ -165,17 +165,17 @@ app.post('/api/generate-content', async (req, res) => {
         },
         {
           role: "user",
-                               content: `This is a video transcript of someone sharing their personal experience with business software. Create SEO content based ONLY on what they actually say - don't add generic information.
+                               content: `Create SEO content for this transcript. Use ONLY information that is actually mentioned in the content - do not add generic information or make assumptions.
 
 ${transcript}
 
-Create an SEO title that captures their personal story/experience (like "Why I Chose [Software]: [Their specific results]")
+Requirements:
+- SEO title: Make it specific to what's actually discussed, not generic
+- Meta description: Based on the actual content and results mentioned
+- FAQs: Only create questions that can be directly answered from the transcript content
+- Key Takeaways: Only use specific details, numbers, and results actually mentioned
 
-Create a meta description about their specific experience and results.
-
-For FAQs: Only create questions that can be answered from what the speaker actually said in this transcript. Base questions on their real experience, challenges, and results mentioned.
-
-For Key Takeaways: Only use specific details, numbers, and results the speaker actually mentions.
+DO NOT make up information that isn't in the transcript.
 
 Return ONLY a valid JSON object with this structure:
 {
