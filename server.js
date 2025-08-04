@@ -66,7 +66,7 @@ app.post('/api/clean-transcript', async (req, res) => {
     console.log('API Key format check:', process.env.OPENAI_API_KEY?.startsWith('sk-'));
     
     const response = await makeOpenAIRequest({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       max_tokens: 16384,
       messages: [
         {
@@ -153,7 +153,7 @@ app.post('/api/generate-content', async (req, res) => {
     console.log('Transcript length:', transcript.length);
     
     const response = await makeOpenAIRequest({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       max_tokens: 16384,
       messages: [
         {
