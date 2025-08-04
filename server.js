@@ -169,11 +169,11 @@ app.post('/api/generate-content', async (req, res) => {
 
 ${transcript}
 
-Requirements:
-- SEO title: Make it specific to what's actually discussed, not generic
-- Meta description: Based on the actual content and results mentioned
-- FAQs: Create detailed, comprehensive answers (2-3 sentences each) that can be directly answered from the transcript content. Include specific details, numbers, and context mentioned.
-- Key Takeaways: Write detailed takeaways (1-2 sentences each) using specific details, numbers, and results actually mentioned. Provide context and explanation.
+Generate exactly:
+- 1 SEO title (65 characters max) - Make it specific to what's actually discussed, not generic
+- 1 meta description (160 characters max) - Based on the actual content and results mentioned
+- 5 FAQs - Create detailed, comprehensive answers (2-3 sentences each) that can be directly answered from the transcript content. Include specific details, numbers, and context mentioned.
+- 4 Key Takeaways - Write detailed takeaways (1-2 sentences each) using specific details, numbers, and results actually mentioned. Provide context and explanation.
 
 Make the FAQs and Key Takeaways substantial and informative for SEO value, but only use information that's actually in the transcript.
 
@@ -246,24 +246,33 @@ DO NOT OUTPUT ANYTHING OTHER THAN VALID JSON.`
     responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     
     try {
+      console.log('🚨 RAW OPENAI RESPONSE:', responseText);
       const generatedContent = JSON.parse(responseText);
+      console.log('🚨 PARSED CONTENT SUCCESS:', Object.keys(generatedContent));
       res.json(generatedContent);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', responseText);
-      res.status(500).json({ error: 'Failed to parse generated content' });
+      console.error('🚨 JSON PARSE ERROR:', parseError.message);
+      console.error('🚨 RAW RESPONSE THAT FAILED:', responseText);
+      console.error('🚨 RESPONSE LENGTH:', responseText.length);
+      console.error('🚨 FIRST 500 CHARS:', responseText.substring(0, 500));
+      res.status(500).json({ 
+        error: 'Failed to parse generated content',
+        parseError: parseError.message,
+        rawResponse: responseText.substring(0, 200)
+      });
     }
 
   } catch (error) {
-    console.error('Error generating content:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      apiKeyPresent: !!process.env.OPENAI_API_KEY,
-      apiKeyValid: process.env.OPENAI_API_KEY?.startsWith('sk-')
-    });
+    console.error('🚨 CONTENT GENERATION ERROR:', error);
+    console.error('🚨 ERROR MESSAGE:', error.message);
+    console.error('🚨 ERROR STACK:', error.stack);
+    console.error('🚨 ERROR TYPE:', error.constructor.name);
+    console.error('🚨 FULL ERROR OBJECT:', JSON.stringify(error, null, 2));
     
     res.status(500).json({ 
-      error: `Failed to generate content: ${error.message}`
+      error: `Failed to generate content: ${error.message}`,
+      errorType: error.constructor.name,
+      details: error.stack
     });
   }
 });
