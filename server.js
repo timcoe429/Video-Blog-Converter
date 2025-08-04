@@ -152,7 +152,7 @@ app.post('/api/generate-content', async (req, res) => {
 
     console.log('Making request to OpenAI API for content generation...');
     console.log('Transcript length:', transcript.length);
-    console.log('🤖 Using model: gpt-4o for content generation');
+    console.log('🤖 Using model: gpt-4o for content generation (v2)');
     
     const response = await makeOpenAIRequest({
       model: "gpt-4o",
