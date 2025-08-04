@@ -71,33 +71,32 @@ app.post('/api/clean-transcript', async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Format this video transcript for blog readability while preserving ALL original transcribed content:
+          content: `Clean up this video transcript for blog readability. This is a TRANSCRIPT, not a rewrite.
 
 FORMATTING REQUIREMENTS:
 1. Identify speakers and format as "**Speaker Name:**" 
-2. Organize into logical sections with section titles in BOLD TEXT ONLY (use **Section Title** format)
-3. Remove filler words (um, uh, you know, like, etc.)
-4. Fix punctuation, capitalization, and obvious typos
-5. Add proper paragraph breaks for readability
+2. Use existing section headers if provided (format as **Section Title**)
+3. Remove ONLY obvious filler words (um, uh, like, you know)
+4. Fix obvious typos and add punctuation for readability
+5. Add paragraph breaks where natural pauses occur
 
-CRITICAL FORMATTING RULES:
-- DO NOT use H1 headings (#) - this is bad for SEO
-- DO NOT use any markdown headings (##, ###, etc.)
-- Use ONLY bold text (**text**) for section titles if needed
-- Keep sections minimal - prefer natural paragraph flow
+CRITICAL RULES:
+- DO NOT change company names, proper nouns, or specific terms
+- DO NOT rewrite or paraphrase sentences
+- DO NOT add or remove meaning
+- DO NOT use H1 headings (#) - use **bold text** only
+- Keep the exact flow and structure of what was said
+- This should read like a cleaned transcript, not a blog article
 
-CRITICAL: Keep ALL the original transcribed words and content. Do NOT:
-- Summarize or paraphrase anything
-- Add new words or phrases not in the original
-- Change the meaning or flow of what was actually said
-- Skip any content from the original transcript
-
-The goal is to make the EXACT transcribed content readable and well-organized, not to rewrite it.
+EXAMPLE:
+If they say "um, Docket software, you know, really helped us" 
+→ Format as "Docket software really helped us"
+NOT "Docka software provided assistance"
 
 Raw transcript:
 ${transcript}
 
-Return the cleaned and formatted transcript with proper speaker identification and natural structure.`
+Return ONLY the cleaned transcript - same words, same meaning, just readable format.`
         }
       ]
     });
