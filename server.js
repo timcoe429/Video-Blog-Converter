@@ -64,6 +64,7 @@ app.post('/api/clean-transcript', async (req, res) => {
     console.log('Cleaning transcript with ChatGPT...');
     console.log('API Key present:', !!process.env.OPENAI_API_KEY);
     console.log('API Key format check:', process.env.OPENAI_API_KEY?.startsWith('sk-'));
+    console.log('🤖 Using model: gpt-4o for transcript cleaning');
     
     const response = await makeOpenAIRequest({
       model: "gpt-4o",
@@ -151,6 +152,7 @@ app.post('/api/generate-content', async (req, res) => {
 
     console.log('Making request to OpenAI API for content generation...');
     console.log('Transcript length:', transcript.length);
+    console.log('🤖 Using model: gpt-4o for content generation');
     
     const response = await makeOpenAIRequest({
       model: "gpt-4o",
