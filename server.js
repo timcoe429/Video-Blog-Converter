@@ -157,14 +157,21 @@ app.post('/api/generate-content', async (req, res) => {
     const response = await makeOpenAIRequest({
       model: "gpt-4o",
       max_tokens: 16384,
+      temperature: 0.7,
       messages: [
         {
+          role: "system",
+          content: "You are an expert content strategist who creates SEO-optimized content. You carefully read transcripts to understand the main business topic being discussed, focusing on current operations rather than background history."
+        },
+        {
           role: "user",
-                               content: `Give me an SEO title and meta description for this transcribed video that I'm turning into a blog:
+                               content: `Read this video transcript carefully and identify the MAIN business/company being discussed (not the speaker's background). Focus on what business they currently run and what software/tools they're talking about.
 
 ${transcript}
 
-Now give me 5 relevant FAQs and 4 Key takeaways that are SEO Friendly and will help us rank for People also ask.
+Based on the MAIN business topic discussed (ignore any past jobs mentioned), give me an SEO title and meta description for this transcribed video that I'm turning into a blog.
+
+Now give me 5 relevant FAQs and 4 Key takeaways that are SEO Friendly and will help us rank for People also ask - focused on the PRIMARY business discussed in the video.
 
 Return ONLY a valid JSON object with this structure:
 {
